@@ -1,5 +1,5 @@
-# !/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# !/usr/bin/env python3
 import os
 import argparse
 import re
@@ -29,7 +29,7 @@ def callback(el):
         return None
 
 
-class habrArticleSrcDownloader():
+class HabrArticleDowld():
 
     def __init__(self):
         self.dir_author = ''
@@ -176,9 +176,9 @@ class habrArticleSrcDownloader():
         spans = url_soup.find_all("span", {"class": "tm-tabs__tab-item"})
 
         a = url_soup.find_all("a", {"class": "tm-tabs__tab-link tm-tabs__tab-link"})
-        # print(f"[info/define_numer_of_pages]: span count: ", spans.count("закладки"),"\n")
-        print(f"[info/define_numer_of_pages]: span source: ", spans.source.attrs.values(), "\n")
-        print(f"[info/define_numer_of_pages]: span source: ", a.source.attrs.values(), "\n")
+        # print(f"[Debug/define_numer_of_pages]: span count: ", spans.count("закладки"),"\n")
+        print(f"[Debug/define_numer_of_pages]: span source: ", spans.source.attrs.values(), "\n")
+        print(f"[Debug/define_numer_of_pages]: span source: ", a.source.attrs.values(), "\n")
 
         l_span = []
         for span in spans:
@@ -205,21 +205,22 @@ class habrArticleSrcDownloader():
             span_value = count
         number_of_pages = math.ceil(int(span_value) / 20)
         # additional
-        print(f"[info/define_numer_of_pages]: Будет проверено {number_of_pages} странниц:\n")
+        print(f"[Info/define_numer_of_pages]: Будет проверено {number_of_pages} странниц:\n")
         return number_of_pages
 
     def get_articles(self, url, type_articles, count):
         number_of_pages = self.define_numer_of_pages(url, type_articles, count)
-        print(f"[Debug/get_articles]: url: {url}\n")
+        # print(f"[Debug/get_articles]: url: {url}\n")
+
         try:
             r = requests.get(url)
         except requests.exceptions.RequestException:
-            print("[error]: Ошибка получения статей: ", url)
+            print("[Error/get_articles]: Ошибка получения статей: ", url)
             return
 
         url_soup = BeautifulSoup(r.text, 'lxml')
         posts = url_soup.findAll('a', {'class': 'tm-title__link'})
-        print(f"[Debug/get_articles]: Объект постов\n{posts}\n")
+        # print(f"[Debug/get_articles]: Объект постов\n{posts}\n")
         self.posts += posts
         if number_of_pages > 1:
             for page in range(2, number_of_pages + 1):
@@ -232,31 +233,49 @@ class habrArticleSrcDownloader():
                 url_soup = BeautifulSoup(r.text, 'lxml')
                 posts = url_soup.findAll('a', {'class': 'tm-title__link'})
                 self.posts += posts
-        print(f"[Debug]: Объект постов\n{self.posts}\n")
+        # print(f"[Debug]: Объект постов\n{self.posts}\n")
 
     def parse_articles(self, type_articles):
-        print(f"[info]: Будет загружено: {len(self.posts)} статей.")
+        print(f"[Info]: Будет загружено: {len(self.posts)} статей.")
 
-        with pymp.Parallel(multiprocessing.cpu_count()) as pmp:
-            # for p in self.posts :
-            for i in pmp.range(0, len(self.posts)):
-                p = self.posts[i]
-                if not args.quiet:
-                    print("[info]: Скачивается:", p.text)
+        # with pymp.Parallel(multiprocessing.cpu_count()) as pmp:
+        #     # for p in self.posts :
+        #     for i in pmp.range(0, len(self.posts)):
+        #         p = self.posts[i]
+        #         if not args.quiet:
+        #             print("[Info]: Скачивается:", p.text)
+        #
+        #         name = self.dir_cor_name(p.text)
+        #
+        #         dir_path = '{:03}'.format(len(self.posts) - i) + " " + name
+        #
+        #         # создаем директории с названиями статей
+        #         self.create_dir(dir_path)
+        #         # заходим в директорию статьи
+        #         os.chdir(dir_path)
+        #
+        #         self.get_article(HABR_TITLE + p.get('href'), name)
+        #
+        #         # выходим из директории статьи
+        #         os.chdir('../')
+        for i in range(0, len(self.posts)):
+            p = self.posts[i]
+            if not args.quiet:
+                print("[Info]: Скачивается:", p.text)
 
-                name = self.dir_cor_name(p.text)
+            name = self.dir_cor_name(p.text)
 
-                dir_path = '{:03}'.format(len(self.posts) - i) + " " + name
+            dir_path = '{:03}'.format(len(self.posts) - i) + " " + name
 
-                # создаем директории с названиями статей
-                self.create_dir(dir_path)
-                # заходим в директорию статьи
-                os.chdir(dir_path)
+            # создаем директории с названиями статей
+            self.create_dir(dir_path)
+            # заходим в директорию статьи
+            os.chdir(dir_path)
 
-                self.get_article(HABR_TITLE + p.get('href'), name)
+            self.get_article(HABR_TITLE + p.get('href'), name)
 
-                # выходим из директории статьи
-                os.chdir('../')
+            # выходим из директории статьи
+            os.chdir('../')
 
     def main(self, url, dir, type_articles, count_posts):
         # создаем папку для статей
@@ -274,7 +293,6 @@ class habrArticleSrcDownloader():
 
         os.chdir('../')
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Скрипт для скачивания статей с https://habr.com/")
     parser.add_argument('-q', '--quiet', help="Quiet mode", action='store_true')
@@ -282,12 +300,13 @@ if __name__ == '__main__':
                         help="Использовать абсолютный путь к изображениям в сохранённых файлах", action='store_true')
     parser.add_argument('-i', '--meta-information', help="Добавить мета-информацию о статье в файл",
                         action='store_true')
+    parser.add_argument('-c', help="Скачать несколько статей", type=str, dest='article_count')
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-u', help="Скачать статьи пользователя", type=str, dest='user_name_for_articles')
     group.add_argument('-f', help="Скачать закладки пользователя", type=str, dest='user_name_for_favorites')
     group.add_argument('-s', help="Скачать одиночную статью", type=str, dest='article_id')
-    group.add_argument('-c', help="Скачать несколько статей", type=str, dest='article_count')
+
 
     args = parser.parse_args()
 
@@ -305,10 +324,10 @@ if __name__ == '__main__':
         output_name = args.article_id
         type_articles = 's'
 
-    habrSD = habrArticleSrcDownloader()
+    habrSD = HabrArticleDowld()
     try:
         if not args.article_id:
-            habrSD.main("https://habr.com/ru/users/" + output_name, output, type_articles)
+            habrSD.main("https://habr.com/ru/users/" + output_name, output, type_articles, args.article_count)
         else:
             habrSD.get_article("https://habr.com/ru/post/" + output_name, type_articles)
     except Exception as ex:
